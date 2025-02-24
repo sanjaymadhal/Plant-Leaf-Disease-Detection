@@ -5,7 +5,7 @@ import cv2
 from PIL import Image
 
 file_id = "1_9Q28QeJXnyRCH18IVxpX5KhuDtZC40c"
-url = 'https://drive.google.com/drive/u/0/folders/1EWFtyl0DYjhodDV-88MBFHE9C-_kyCkC'
+url = 'https://drive.google.com/file/d/1cnHqBYL0seRGFMb8Jt535-126aOG1tzA/view?usp=sharing'
 model_path = "trained_plant_disease_model.keras"
 
 # Load the trained model once and cache it
