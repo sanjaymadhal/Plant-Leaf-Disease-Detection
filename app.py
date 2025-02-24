@@ -4,11 +4,15 @@ import numpy as np
 import cv2
 from PIL import Image
 
+file_id = "1_9Q28QeJXnyRCH18IVxpX5KhuDtZC40c"
+url = 'https://drive.google.com/drive/u/0/folders/1EWFtyl0DYjhodDV-88MBFHE9C-_kyCkC'
+model_path = "trained_plant_disease_model.keras"
+
 # Load the trained model once and cache it
 @st.cache_resource()
 def load_model():
     try:
-        model = tf.keras.models.load_model("trained_plant_disease_model.keras")  # Ensure correct path
+        model = tf.keras.models.load_model(model_path)  # Ensure correct path
         st.success("✅ Model loaded successfully!")
         return model
     except Exception as e:
