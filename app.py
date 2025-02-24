@@ -5,38 +5,29 @@ import cv2
 from PIL import Image
 
 # Load the trained model once and cache it
-@st.cache_resource
+@st.cache_resource()
 def load_model():
-    model = tf.keras.models.load_model('trained_plant_disease_model.keras')  # Update with correct path
-    return model
+    try:
+        model = tf.keras.models.load_model("trained_plant_disease_model.keras")  # Ensure correct path
+        st.success("✅ Model loaded successfully!")
+        return model
+    except Exception as e:
+        st.error(f"⚠ Error loading model: {e}")
+        return None
 
+# Load the model
+model = load_model()
 
-# Class labels (Modify based on your dataset)
-CLASS_NAMES = ['Potato__Healthy', 'Potato_Early_blight', 'Potato__Late_blight']
+# Class labels (Modify based on dataset)
+CLASS_NAMES = ['Potato_Early_blight', 'PotatoLate_blight', 'Potato_Healthy']
 
-# Streamlit UI
-def main():
-    st.title("🍂 Potato Leaf Disease Detector")
-    st.write("Upload an image of a potato leaf to detect diseases.")
-
-    uploaded_file = st.file_uploader("📤 Upload an image...", type=["jpg", "png", "jpeg"])
-
-    if uploaded_file is not None:
-        image = Image.open(uploaded_file).convert("RGB")  # Convert to RGB format
-        st.image(image, caption="📷 Uploaded Image", use_column_width=True)
-
-        if st.button("🔍 Predict Disease"):
-            if load_model is not None:
-                result, confidence = predict(image)
-                st.success(f"🩺 **Prediction:** {result} ({confidence:.2f}% Confidence)")
-                
-                # Display confidence as a progress bar
-                st.progress(int(confidence))
-            else:
-                st.error("⚠️ Model not loaded. Please check the model file.")
+# Sidebar Navigation
+st.sidebar.title("🌿 Plant Disease Detection System")
+app_mode = st.sidebar.selectbox("Select Page", ["🏠 HOME", "🔬 DISEASE RECOGNITION"])
 
 # Image Preprocessing and Prediction
-def predict(image):
+def model_prediction(image, model):
+    """Process image and predict disease using the loaded model."""
     try:
         # Convert PIL image to numpy array
         img_array = np.array(image)
@@ -44,20 +35,55 @@ def predict(image):
         # Resize image to match model input size (128x128)
         img_resized = cv2.resize(img_array, (128, 128))
 
-        # Normalize pixel values to range [0,1]
-        img_resized = img_resized / 255.0
+        
 
         # Expand dimensions to create a batch of size 1
         img_expanded = np.expand_dims(img_resized, axis=0)
 
         # Make a prediction
-        predictions = load_model.predict(img_expanded)
-        predicted_class = CLASS_NAMES[np.argmax(predictions)]
+        predictions = model.predict(img_expanded)
+        predicted_index = np.argmax(predictions)
         confidence = np.max(predictions) * 100
 
-        return predicted_class, confidence
+        return predicted_index, confidence
     except Exception as e:
-        return f"Error during prediction: {e}", 0
+        st.error(f"⚠ Error during prediction: {e}")
+        return None, None
+
+# Main Page
+if app_mode == "🏠 HOME":
+    st.markdown("<h1 style='text-align: center;'>🌱 Plant Disease Detection System for Sustainable Agriculture</h1>", 
+                unsafe_allow_html=True)
+    st.write("This system helps farmers and agricultural researchers detect plant diseases efficiently.")
+
+# Disease Recognition Page
+elif app_mode == "🔬 DISEASE RECOGNITION":
+    st.header("🔍 Plant Disease Detection System")
+    
+    test_image = st.file_uploader("📤 Choose an Image:", type=["jpg", "png", "jpeg"])
+
+    if test_image is not None:
+        image = Image.open(test_image).convert("RGB")  # Convert to RGB format
+        st.image(image, caption="📷 Uploaded Image", use_column_width=True)
+
+        if st.button("🔍 Predict"):
+            if model is None:
+                st.error("⚠ Model could not be loaded. Please check the file path.")
+            else:
+                st.snow()  # Show animation effect
+                st.write("⏳ Analyzing the image...")
+
+                # Prediction
+                result_index, confidence = model_prediction(image, model)
+
+                if result_index is not None:
+                    # Display Result
+                    st.success(f"🩺 *Prediction:* {CLASS_NAMES[result_index]} ({confidence:.2f}% Confidence)")
+
+                    # Show confidence as progress bar
+                    st.progress(int(confidence))
+                else:
+                    st.error("❌ Prediction failed.")
 
 if __name__ == "__main__":
-    main()
+    st.write("✅ Ready for Predictions")
